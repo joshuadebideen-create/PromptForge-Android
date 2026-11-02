@@ -1,85 +1,110 @@
 
-extends CharacterBody3D
+extends CanvasLayer
 
-@export var acceleration: float = 12.0
-@export var max_speed: float = 35.0
-@export var reverse_speed: float = 10.0
-@export var steering_speed: float = 1.5
-@export var braking_force: float = 25.0
-@export var engine_brake_stage_1: float = 5.0
-@export var engine_brake_stage_2: float = 10.0
-@export var engine_brake_stage_3: float = 18.0
-@export var gravity: float = 9.8
+signal steering_changed(value: float)
+signal throttle_changed(value: float)
+signal brake_changed(pressed: bool)
+signal engine_brake_changed(stage: int)
+signal camera_switch_requested
+signal windows_toggle_requested
 
-var throttle_input: float = 0.0
-var steering_input: float = 0.0
-var brake_input: bool = false
-var engine_brake_stage: int = 0
-var current_speed: float = 0.0
+var engine_stage: int = 0
+var engine_button: Button
 
-func _physics_process(delta: float) -> void:
-    if not is_on_floor():
-        velocity.y -= gravity * delta
+func _ready() -> void:
+    create_controls()
+
+func create_controls() -> void:
+    var screen := Control.new()
+    screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    add_child(screen)
+
+    create_button(screen, "◀", Vector2(25, -115),
+        Control.PRESET_BOTTOM_LEFT, "left")
+    create_button(screen, "▶", Vector2(115, -115),
+        Control.PRESET_BOTTOM_LEFT, "right")
+
+    create_button(screen, "ACCEL", Vector2(-125, -115),
+        Control.PRESET_BOTTOM_RIGHT, "accelerate")
+    create_button(screen, "REV", Vector2(-225, -115),
+        Control.PRESET_BOTTOM_RIGHT, "reverse")
+    create_button(screen, "BRAKE", Vector2(-125, -205),
+        Control.PRESET_BOTTOM_RIGHT, "brake")
+
+    engine_button = Button.new()
+    engine_button.text = "ENGINE: OFF"
+    engine_button.custom_minimum_size = Vector2(125, 65)
+    engine_button.set_anchors_and_offsets_preset(
+        Control.PRESET_BOTTOM_RIGHT
+    )
+    engine_button.position = Vector2(-260, -205)
+    screen.add_child(engine_button)
+    engine_button.pressed.connect(cycle_engine_brake)
+
+    var camera_button := Button.new()
+    camera_button.text = "CAMERA"
+    camera_button.custom_minimum_size = Vector2(110, 55)
+    camera_button.position = Vector2(20, 20)
+    camera_button.set_anchors_and_offsets_preset(
+        Control.PRESET_TOP_RIGHT
+    )
+    screen.add_child(camera_button)
+    camera_button.pressed.connect(
+        func(): camera_switch_requested.emit()
+    )
+
+    var window_button := Button.new()
+    window_button.text = "WINDOW"
+    window_button.custom_minimum_size = Vector2(110, 55)
+    window_button.position = Vector2(20, 85)
+    window_button.set_anchors_and_offsets_preset(
+        Control.PRESET_TOP_RIGHT
+    )
+    screen.add_child(window_button)
+    window_button.pressed.connect(
+        func(): windows_toggle_requested.emit()
+    )
+
+func create_button(
+    parent: Control,
+    label: String,
+    offset: Vector2,
+    preset: Control.LayoutPreset,
+    action: String
+) -> void:
+    var button := Button.new()
+    button.text = label
+    button.custom_minimum_size = Vector2(105, 75)
+    button.set_anchors_and_offsets_preset(preset)
+    button.position = offset
+    parent.add_child(button)
+
+    button.button_down.connect(
+        func(): handle_action(action, true)
+    )
+    button.button_up.connect(
+        func(): handle_action(action, false)
+    )
+
+func handle_action(action: String, pressed: bool) -> void:
+    match action:
+        "left":
+            steering_changed.emit(-1.0 if pressed else 0.0)
+        "right":
+            steering_changed.emit(1.0 if pressed else 0.0)
+        "accelerate":
+            throttle_changed.emit(1.0 if pressed else 0.0)
+        "reverse":
+            throttle_changed.emit(-1.0 if pressed else 0.0)
+        "brake":
+            brake_changed.emit(pressed)
+
+func cycle_engine_brake() -> void:
+    engine_stage = (engine_stage + 1) % 4
+
+    if engine_stage == 0:
+        engine_button.text = "ENGINE: OFF"
     else:
-        velocity.y = 0.0
+        engine_button.text = "ENGINE: STAGE " + str(engine_stage)
 
-    if brake_input:
-        current_speed = move_toward(
-            current_speed,
-            0.0,
-            braking_force * delta
-        )
-    elif engine_brake_stage > 0:
-        var engine_force: float = 0.0
-
-        match engine_brake_stage:
-            1:
-                engine_force = engine_brake_stage_1
-            2:
-                engine_force = engine_brake_stage_2
-            3:
-                engine_force = engine_brake_stage_3
-
-        current_speed = move_toward(
-            current_speed,
-            0.0,
-            engine_force * delta
-        )
-    else:
-        var target_speed := throttle_input * max_speed
-
-        if throttle_input < 0.0:
-            target_speed = throttle_input * reverse_speed
-
-        current_speed = move_toward(
-            current_speed,
-            target_speed,
-            acceleration * delta
-        )
-
-    if absf(current_speed) > 0.1:
-        rotate_y(
-            -steering_input *
-            steering_speed *
-            delta *
-            signf(current_speed)
-        )
-
-    var forward_direction := -global_transform.basis.z
-
-    velocity.x = forward_direction.x * current_speed
-    velocity.z = forward_direction.z * current_speed
-
-    move_and_slide()
-
-func set_throttle(value: float) -> void:
-    throttle_input = clampf(value, -1.0, 1.0)
-
-func set_steering(value: float) -> void:
-    steering_input = clampf(value, -1.0, 1.0)
-
-func set_brake(pressed: bool) -> void:
-    brake_input = pressed
-
-func set_engine_brake_stage(stage: int) -> void:
-    engine_brake_stage = clampi(stage, 0, 3)
+    engine_brake_changed.emit(engine_stage)
