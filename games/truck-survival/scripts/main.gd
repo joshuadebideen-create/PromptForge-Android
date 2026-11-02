@@ -1,24 +1,19 @@
 
 extends Node3D
 
+const MobileControls = preload("res://scripts/mobile_controls.gd")
+
 @export var world_label: String = "Open-World Truck Survival Simulator"
+
+@onready var truck: CharacterBody3D = $Truck
 
 func _ready() -> void:
     print("Loaded: ", world_label)
     create_world()
+    connect_mobile_controls()
 
 func create_world() -> void:
-    # Create a large placeholder terrain
-    var ground_mesh := BoxMesh.new()
-    ground_mesh.size = Vector3(200.0, 1.0, 200.0)
-
-    var ground := MeshInstance3D.new()
-    ground.name = "WorldGround"
-    ground.mesh = ground_mesh
-    ground.position = Vector3(0.0, -1.0, 0.0)
-    add_child(ground)
-
-    # Create a simple road
+    # Create the highway
     var road_mesh := BoxMesh.new()
     road_mesh.size = Vector3(12.0, 0.15, 200.0)
 
@@ -28,4 +23,25 @@ func create_world() -> void:
     road.position = Vector3(0.0, -0.35, 0.0)
     add_child(road)
 
-    print("Starter world created.")
+func connect_mobile_controls() -> void:
+    var controls = MobileControls.new()
+    add_child(controls)
+
+    controls.steering_changed.connect(
+        truck.set_steering
+    )
+
+    controls.throttle_changed.connect(
+        truck.set_throttle
+    )
+
+    controls.brake_changed.connect(
+        truck.set_brake
+    )
+
+    controls.engine_brake_changed.connect(
+        truck.set_engine_brake_stage
+    )
+
+    print("Mobile driving controls connected.")
+
