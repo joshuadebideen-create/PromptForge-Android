@@ -1,0 +1,9 @@
+
+[configuration]
+
+entry_symbol = "icy_radio_streamer_init"
+compatibility_minimum = 4.3
+
+[libraries]
+
+android.release.arm64 = "bin/libicy_radio_streamer.android.release.arm64.so"
