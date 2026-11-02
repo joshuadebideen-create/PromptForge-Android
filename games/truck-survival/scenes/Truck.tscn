@@ -1,13 +1,14 @@
 
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://vehicles/truck_controller.gd" id="1"]
+[ext_resource type="Script" path="res://vehicles/truck_cabin.gd" id="2"]
 
 [sub_resource type="BoxShape3D" id="BoxShape_truck"]
 size = Vector3(2.5, 2.0, 5.0)
 
 [sub_resource type="BoxMesh" id="BoxMesh_truck"]
-size = Vector3(2.5, 2.0, 5.0)
+size = Vector3(2.5, 0.6, 5.0)
 
 [node name="Truck" type="CharacterBody3D"]
 script = ExtResource("1")
@@ -17,10 +18,18 @@ position = Vector3(0, 1, 0)
 shape = SubResource("BoxShape_truck")
 
 [node name="TruckBody" type="MeshInstance3D" parent="."]
-position = Vector3(0, 1, 0)
+position = Vector3(0, 0.3, 0)
 mesh = SubResource("BoxMesh_truck")
+
+[node name="Cabin" type="Node3D" parent="."]
+script = ExtResource("2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 position = Vector3(0, 5, 10)
 rotation = Vector3(-0.25, 0, 0)
 current = true
+
+[node name="CockpitCamera" type="Camera3D" parent="."]
+position = Vector3(-0.55, 1.85, -0.15)
+rotation = Vector3(-0.08, 0, 0)
+current = false
