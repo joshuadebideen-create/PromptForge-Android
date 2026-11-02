@@ -14,6 +14,7 @@ jobs:
   build-android-radio:
     name: Compile IceCast radio extension for Android
     runs-on: ubuntu-22.04
+
     steps:
       - name: Check out radio extension source
         uses: actions/checkout@v4
@@ -31,7 +32,9 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android NDK r23c
         uses: nttld/setup-ndk@v1
