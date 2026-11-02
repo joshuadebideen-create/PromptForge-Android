@@ -1,4 +1,3 @@
-
 extends CanvasLayer
 
 const DEFAULT_STATION := "http://puma.streemlion.com:1220/stream"
@@ -16,9 +15,7 @@ func _ready() -> void:
 func create_radio_interface() -> void:
     var panel := PanelContainer.new()
     panel.custom_minimum_size = Vector2(330, 145)
-    panel.set_anchors_and_offsets_preset(
-        Control.PRESET_TOP_RIGHT
-    )
+    panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
     panel.position = Vector2(-345, 15)
     add_child(panel)
 
@@ -60,6 +57,11 @@ func setup_radio_extension() -> void:
     radio_audio = AudioStreamPlayer.new()
     radio_audio.name = "RadioAudio"
     radio_audio.volume_db = -5.0
+
+    var generator := AudioStreamGenerator.new()
+    generator.buffer_length = 2.0
+    radio_audio.stream = generator
+
     add_child(radio_audio)
 
     radio = ClassDB.instantiate("IcyRadioPlayer")
@@ -99,7 +101,7 @@ func play_radio() -> void:
     radio.call(
         "play",
         station_url,
-        PackedStringArray(["User-Agent: Godot/4.5"])
+        ["User-Agent: Godot/4.5"]
     )
 
 func stop_radio() -> void:
@@ -128,6 +130,7 @@ func _on_stream_failed(
     http_code: int
 ) -> void:
     status_label.text = "Stream error: HTTP " + str(http_code)
+
     push_warning(
         "Radio stream failed: %s, HTTP %d" %
         [str(result), http_code]
