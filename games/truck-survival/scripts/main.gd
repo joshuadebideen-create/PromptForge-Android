@@ -4,6 +4,7 @@ extends Node3D
 const MobileControls = preload("res://scripts/mobile_controls.gd")
 const CBRadio = preload("res://systems/cb_radio.gd")
 const MusicPlayer = preload("res://systems/music_player.gd")
+const OnlineRadio = preload("res://systems/online_radio.gd")
 
 @export var world_label: String = "Open-World Truck Survival Simulator"
 
@@ -12,6 +13,7 @@ const MusicPlayer = preload("res://systems/music_player.gd")
 var cockpit_mode: bool = false
 var cb_radio: CanvasLayer
 var music_player: CanvasLayer
+var online_radio: CanvasLayer
 
 func _ready() -> void:
     print("Loaded: ", world_label)
@@ -19,6 +21,7 @@ func _ready() -> void:
     connect_mobile_controls()
     create_cb_radio()
     create_music_player()
+    create_online_radio()
 
 func create_world() -> void:
     var road_mesh := BoxMesh.new()
@@ -52,6 +55,10 @@ func create_cb_radio() -> void:
 func create_music_player() -> void:
     music_player = MusicPlayer.new()
     add_child(music_player)
+
+func create_online_radio() -> void:
+    online_radio = OnlineRadio.new()
+    add_child(online_radio)
 
 func switch_camera() -> void:
     cockpit_mode = not cockpit_mode
