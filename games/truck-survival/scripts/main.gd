@@ -7,13 +7,14 @@ const MobileControls = preload("res://scripts/mobile_controls.gd")
 
 @onready var truck: CharacterBody3D = $Truck
 
+var cockpit_mode: bool = false
+
 func _ready() -> void:
     print("Loaded: ", world_label)
     create_world()
     connect_mobile_controls()
 
 func create_world() -> void:
-    # Create the highway
     var road_mesh := BoxMesh.new()
     road_mesh.size = Vector3(12.0, 0.15, 200.0)
 
@@ -27,21 +28,32 @@ func connect_mobile_controls() -> void:
     var controls = MobileControls.new()
     add_child(controls)
 
-    controls.steering_changed.connect(
-        truck.set_steering
-    )
-
-    controls.throttle_changed.connect(
-        truck.set_throttle
-    )
-
-    controls.brake_changed.connect(
-        truck.set_brake
-    )
-
+    controls.steering_changed.connect(truck.set_steering)
+    controls.throttle_changed.connect(truck.set_throttle)
+    controls.brake_changed.connect(truck.set_brake)
     controls.engine_brake_changed.connect(
         truck.set_engine_brake_stage
     )
 
-    print("Mobile driving controls connected.")
+    controls.camera_switch_requested.connect(
+        switch_camera
+    )
 
+    controls.windows_toggle_requested.connect(
+        toggle_windows
+    )
+
+func switch_camera() -> void:
+    cockpit_mode = not cockpit_mode
+
+    if cockpit_mode:
+        truck.get_node("CockpitCamera").make_current()
+        print("First-person cockpit view")
+    else:
+        truck.get_node("Camera3D").make_current()
+        print("Third-person driving view")
+
+func toggle_windows() -> void:
+    var cabin = truck.get_node("Cabin")
+    cabin.toggle_windows()
+    print("Cabin windows toggled")
