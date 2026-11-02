@@ -19,3 +19,8 @@ shape = SubResource("BoxShape_truck")
 [node name="TruckBody" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1, 0)
 mesh = SubResource("BoxMesh_truck")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 5, 10)
+rotation = Vector3(-0.25, 0, 0)
+current = true
